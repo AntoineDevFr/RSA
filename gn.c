@@ -66,8 +66,8 @@ void gn_mul(struct gn* a, struct gn* b, struct gn* c) {
         for (int j = 0; j < ARRAY_SIZE; ++j) {
             if (i + j < ARRAY_SIZE) {
                 tmp = (BLOC_64)a->array[i] * (BLOC_64)b->array[j] + c->array[i + j] + carry;
-                c->array[i + j] = tmp & MAX_VAL;
-                carry = tmp >> 32;
+                c->array[i + j] = tmp & MAX_VAL; // conserve les 32 bits de poids faible
+                carry = tmp >> 32; //déplace vers la droite de 32 bits, garde les 32 bits de poids fort
             }
         }
         if (carry > 0 && (i + ARRAY_SIZE) < ARRAY_SIZE) {
