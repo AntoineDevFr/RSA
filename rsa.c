@@ -48,6 +48,13 @@ void gn_print(struct gn* n) {
     printf("\n");
 }
 
+void gn_writeFile(struct gn* n, FILE* file) {
+    for (int i = ARRAY_SIZE - 1 ; i >= 0; i--) {
+        fprintf(file, SPRINTF_FORMAT_STR, n->array[i]);
+    }
+    fprintf(file, ";");
+}
+
 void gn_add(struct gn* a, struct gn* b, struct gn* c)
 {
   BLOC_64 tmp;
@@ -99,48 +106,54 @@ void gn_mul(struct gn* a, struct gn* b, struct gn* c)
     }
 }
 
+void generate_testVector(FILE* file, int nbrTest) {
+  struct gn p, q, add, mult;
+    file = fopen("test.txt", "w");
+    if (file == NULL) {
+        printf("Erreur lors de l'ouverture du fichier.\n");
+    }
 
-int main() {
-    struct gn p, q, add, mult, result, random;
-
-    for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < nbrTest; i++) {
       gn_generate_1024(&p);
       gn_generate_1024(&q);
       gn_init(&add);
-      gn_init(&result);
       gn_init(&mult);
 
       gn_add(&p, &q, &add);
       gn_mul(&p, &q, &mult);
 
-      printf("P = ");
-      gn_print(&p);
-      printf("Q = ");
-      gn_print(&q);
-      printf("Addition: ");
-      gn_print(&add);
-      printf("Multiplication: ");
-      gn_print(&mult);
+      gn_writeFile(&p, file);
+      gn_writeFile(&q, file);
+      gn_writeFile(&add, file);
+      gn_writeFile(&mult, file);
     }
-    
-    gn_init(&p);
-    gn_init(&q);
-    gn_init(&result);
-    char p_str[] = "000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000283";
-    char q_str[] = "000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000439";
-   
-    gn_from_string(&p, p_str, strlen(p_str));
-    gn_from_string(&q, q_str, strlen(q_str));
+};
 
-    printf("P = "); 
-    gn_print(&p);
+int main() {
+  /*Test*/
+  FILE *file;
+  generate_testVector(file, 1000);
 
-    printf("Q = ");
-    gn_print(&q);
+  /*Test clés cours*/
+  struct gn p, q, result;
+  gn_init(&p);
+  gn_init(&q);
+  gn_init(&result);
+  char p_str[] = "000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000283";
+  char q_str[] = "000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000439";
+  
+  gn_from_string(&p, p_str, strlen(p_str));
+  gn_from_string(&q, q_str, strlen(q_str));
 
-    printf("Resultat de la multiplication:\n");
-    gn_mul(&p, &q, &result);
-    gn_print(&result);
+  printf("P = "); 
+  gn_print(&p);
 
-    return 0;
+  printf("Q = ");
+  gn_print(&q);
+
+  printf("Resultat de la multiplication:\n");
+  gn_mul(&p, &q, &result);
+  gn_print(&result);
+
+  return 0;
 }
