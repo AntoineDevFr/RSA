@@ -9,7 +9,7 @@
 #define SPRINTF_FORMAT_STR       "%.08x"
 #define SSCANF_FORMAT_STR        "%8x"
 #define MAX_VAL                  ((BLOC_64)0xFFFFFFFF)
-#define ARRAY_SIZE               65
+#define ARRAY_SIZE               129
 
 struct gn {
     BLOC array[ARRAY_SIZE];
@@ -21,7 +21,11 @@ void gn_print(struct gn* n);
 void gn_writeFile(struct gn* n, FILE* file);
 void gn_add(struct gn* a, struct gn* b, struct gn* c);
 void gn_generate_1024(struct gn* n);
+void gn_generate_max(struct gn* n);
 void gn_mul(struct gn* a, struct gn* b, struct gn* c);
 void generate_testVector(FILE* file, int nbrTest);
+void gn_soustraction(struct gn* a, struct gn* b, struct gn* c);
+void gn_addition_modulaire(struct gn* a, struct gn* b, struct gn* n, struct gn* c);
+int gn_compare(struct gn* a, struct gn* b);
 
 #endif  // GN_H

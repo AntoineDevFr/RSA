@@ -49,9 +49,33 @@ void gn_add(struct gn* a, struct gn* b, struct gn* c) {
     }
 }
 
+void gn_soustraction(struct gn* a, struct gn* b, struct gn* c)
+{
+  BLOC_64 res;
+  BLOC_64 tmp1;
+  BLOC_64 tmp2;
+  int borrow = 0;
+  int i;
+  for (i = 0; i < ARRAY_SIZE; ++i)
+  {
+    tmp1 = (BLOC_64)a->array[i] + (MAX_VAL + 1); /* + number_base */
+    tmp2 = (BLOC_64)b->array[i] + borrow;;
+    res = (tmp1 - tmp2);
+    c->array[i] = (BLOC)(res & MAX_VAL); /* "modulo number_base" == "% (number_base - 1)" if number_base is 2^N */
+    borrow = (res <= MAX_VAL);
+  }
+}
+
 void gn_generate_1024(struct gn* n) {
     gn_init(n);
     for (int i = 0; i < 32; ++i) {
+        n->array[i] = rand();
+    }
+}
+
+void gn_generate_max(struct gn* n) {
+    gn_init(n);
+    for (int i = 0; i < ARRAY_SIZE; ++i) {
         n->array[i] = rand();
     }
 }
@@ -95,4 +119,38 @@ void generate_testVector(FILE* file, int nbrTest) {
         gn_writeFile(&mult, file);
     }
     fclose(file);
+}
+
+int gn_compare(struct gn* a, struct gn* b) {
+    for (int i = ARRAY_SIZE - 1; i >= 0; --i) {
+        if (a->array[i] > b->array[i]) {
+            return 1; // A > B
+        } else if (a->array[i] < b->array[i]) {
+            return -1; // A < B
+        }
+    }
+    return 0; // A == B
+}
+
+//A et B sont des entiers modulo N
+void gn_addition_modulaire(struct gn* a, struct gn* b, struct gn* n, struct gn* c) {
+    gn_init(c);
+
+    //A+B
+    struct gn aPb;
+    gn_init(&aPb);
+    gn_add(a, b, &aPb);
+
+    if (gn_compare(&aPb, n) == -1) {
+        //A+B
+        gn_add(a, b, c);
+    } else {
+        //A+B-N
+        gn_print(&aPb);
+        gn_soustraction(&aPb, n, c);
+    }
+}   
+
+void gn_mult_modulaire_montgomery(struct gn* a, struct gn* b, struct gn* c) {
+
 }
