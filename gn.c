@@ -150,7 +150,82 @@ void gn_addition_modulaire(struct gn* a, struct gn* b, struct gn* n, struct gn* 
         gn_soustraction(&aPb, n, c);
     }
 }   
+void gn_shift_right_blocs(struct gn* m, int k) {
+    if (k <= 0) return; // Rien à faire si k <= 0
+    if (k >= ARRAY_SIZE) {
+        gn_init(m); // Décale de plus que la taille => tout est 0
+        return;
+    }
 
-void gn_mult_modulaire_montgomery(struct gn* a, struct gn* b, struct gn* c) {
+    // Décaler les blocs vers la droite
+    for (int i = 0; i < ARRAY_SIZE - k; ++i) {
+        m->array[i] = m->array[i + k];
+    }
 
+    // Remplir les k derniers blocs avec des zéros
+    for (int i = ARRAY_SIZE - k; i < ARRAY_SIZE; ++i) {
+        m->array[i] = 0;
+    }
+}
+
+
+// k = 65 avec r = 2**(32*65)
+void montgomery_multiplication(struct gn* A, struct gn* B, struct gn* n, struct gn* r, struct gn* v, int k, struct gn* result) {
+    struct gn s, t, m, u;
+    gn_init(&s);
+    gn_init(&t);
+    gn_init(&m);
+    gn_init(&u);
+    gn_init(result);
+
+    // s = A * B
+    gn_mul(A, B, &s);
+
+    // t = (s * v) mod r
+    gn_mul(&s, v, &t);
+
+    // Réduire t modulo r : comme r est une puissance de 2, on garde seulement les k premiers blocs de t
+    for (int i = k; i < ARRAY_SIZE; ++i) {
+        t.array[i] = 0;  // t mod r
+    }
+
+    // m = s + t * n
+    struct gn tmp;
+    gn_init(&tmp);
+    gn_mul(&t, n, &tmp);  // tmp = t * n
+    gn_add(&s, &tmp, &m); // m = s + t * n
+
+    // Étape 4: u = m / r (Décalage de m de k blocs vers la droite)
+    gn_shift_right_blocs(&m, k); // Décaler m de k blocs vers la droite
+
+    // Étape 5: Ajustement final : si u >= n alors result = u - n, sinon result = u
+    if (gn_compare(&m, n) == 1) {
+        gn_soustraction(&m, n, result);  // result = u - n
+    } else {
+        gn_add(&m, &u, result);  // result = u
+    }
+}
+
+
+void square_and_multiply(struct gn* A,struct gn* k, struct gn* r, struct gn* n, struct gn* v, struct gn* result) {
+    struct gn P; 
+    struct gn null;
+    gn_init(&null);
+
+    gn_init(&P);
+    gn_init(result);
+
+    gn_soustraction(r, n, &P); // P = r - n
+
+    int i = ARRAY_SIZE - 1;
+
+    while (i >= 0) {
+        montgomery_multiplication(&P, &P, n, r, v, 65, &P);
+
+        if (k->array[i] == 1) {
+            montgomery_multiplication(&P, A, n, r, v, 65, &P);
+        }
+        i--;
+    }
+    gn_add(&P, &null, result);
 }
