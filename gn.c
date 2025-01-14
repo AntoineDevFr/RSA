@@ -229,11 +229,16 @@ void square_and_multiply(struct gn* a, struct gn* k, struct gn* r2, struct gn* r
     
     montgomery_multiplication(a, r2, n, v, 65, &A); // A = a * r mod n
     gn_soustraction(r, n, &P); // P = r - n
-    
     while (i >= 0) {
         H = k->array[i];
+        
         l = 0;
         //printf("%d\n",i);
+
+        memset(bin, 0, sizeof(bin));
+
+        printf("H: %d\n",H);
+        printf("i: %d\n",i);
         while( H > 0 ){
             if (H % 2 == 0){
                 bin[l] = 0;
@@ -243,13 +248,21 @@ void square_and_multiply(struct gn* a, struct gn* k, struct gn* r2, struct gn* r
             H = H/2;
             l++;
 	    }
+        printf("bin: ");
+        for (int i = 31; i >= 0; i--) {
+            printf("%d", bin[i]);
+        }
+        printf("\n");
         //bin contient le nombre en binaire 
 
         j = 31;
-        while(j>0){
+        while(j>=0){
             montgomery_multiplication(&P, &P, n, v, 65, &tmp);
             gn_add(&tmp, &null, &P);
             gn_init(&tmp);
+
+            printf("j: %d\n",j);
+            printf("bin[j]: %d\n",bin[j]);
 
             if(bin[j] == 1 ){
                 montgomery_multiplication(&P, &A, n, v, 65, &tmp);
