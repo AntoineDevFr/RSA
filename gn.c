@@ -170,7 +170,7 @@ void gn_shift_right_blocs(struct gn* m, int k) {
 
 
 // k = 65 avec r = 2**(32*65)
-void montgomery_multiplication(struct gn* A, struct gn* B, struct gn* n, struct gn* r, struct gn* v, int k, struct gn* result) {
+void montgomery_multiplication(struct gn* A, struct gn* B, struct gn* n, struct gn* v, int k, struct gn* result) {
     struct gn s, t, m, u;
     gn_init(&s);
     gn_init(&t);
@@ -188,16 +188,20 @@ void montgomery_multiplication(struct gn* A, struct gn* B, struct gn* n, struct 
     for (int i = k; i < ARRAY_SIZE; ++i) {
         t.array[i] = 0;  // t mod r
     }
-
+    //t est vérifié 
+    
     // m = s + t * n
     struct gn tmp;
     gn_init(&tmp);
     gn_mul(&t, n, &tmp);  // tmp = t * n
     gn_add(&s, &tmp, &m); // m = s + t * n
 
+    //m est vérifié
+
     // Étape 4: u = m / r (Décalage de m de k blocs vers la droite)
     gn_shift_right_blocs(&m, k); // Décaler m de k blocs vers la droite
 
+    //u est vérifié
     // Étape 5: Ajustement final : si u >= n alors result = u - n, sinon result = u
     if (gn_compare(&m, n) == 1) {
         gn_soustraction(&m, n, result);  // result = u - n
@@ -206,26 +210,55 @@ void montgomery_multiplication(struct gn* A, struct gn* B, struct gn* n, struct 
     }
 }
 
-
-void square_and_multiply(struct gn* A,struct gn* k, struct gn* r, struct gn* n, struct gn* v, struct gn* result) {
-    struct gn P; 
-    struct gn null;
-    gn_init(&null);
+void square_and_multiply(struct gn* a, struct gn* k, struct gn* r2, struct gn* r, struct gn* n, struct gn* v, struct gn* result) {
+    struct gn A, P, un,null, tmp; 
+    uint32_t H;
+    int i = ARRAY_SIZE - 1;
+    int j;
+    int l = 0;
+    int bin[32];
 
     gn_init(&P);
+    gn_init(&A);
     gn_init(result);
+    gn_init(&un);
+    gn_init(&tmp);
+    gn_init(&null);
+    un.array[0] = 1;
 
+    
+    montgomery_multiplication(a, r2, n, v, 65, &A); // A = a * r mod n
     gn_soustraction(r, n, &P); // P = r - n
-
-    int i = ARRAY_SIZE - 1;
-
+    
     while (i >= 0) {
-        montgomery_multiplication(&P, &P, n, r, v, 65, &P);
+        H = k->array[i];
+        l = 0;
+        //printf("%d\n",i);
+        while( H > 0 ){
+            if (H % 2 == 0){
+                bin[l] = 0;
+            }else{
+                bin[l] = 1;
+            }
+            H = H/2;
+            l++;
+	    }
+        //bin contient le nombre en binaire 
 
-        if (k->array[i] == 1) {
-            montgomery_multiplication(&P, A, n, r, v, 65, &P);
-        }
+        j = 31;
+        while(j>0){
+            montgomery_multiplication(&P, &P, n, v, 65, &tmp);
+            gn_add(&tmp, &null, &P);
+            gn_init(&tmp);
+
+            if(bin[j] == 1 ){
+                montgomery_multiplication(&P, &A, n, v, 65, &tmp);
+                gn_add(&tmp, &null, &P);
+                gn_init(&tmp);
+            }
+            j--;
+	    }
         i--;
     }
-    gn_add(&P, &null, result);
+    montgomery_multiplication(&P, &un, n, v, 65, result); 
 }

@@ -9,7 +9,7 @@
 #define SPRINTF_FORMAT_STR       "%.08x"
 #define SSCANF_FORMAT_STR        "%8x"
 #define MAX_VAL                  ((BLOC_64)0xFFFFFFFF)
-#define ARRAY_SIZE               129
+#define ARRAY_SIZE               131
 
 struct gn {
     BLOC array[ARRAY_SIZE];
@@ -28,7 +28,7 @@ void gn_soustraction(struct gn* a, struct gn* b, struct gn* c);
 void gn_addition_modulaire(struct gn* a, struct gn* b, struct gn* n, struct gn* c);
 int gn_compare(struct gn* a, struct gn* b);
 void gn_shift_right_blocs(struct gn* m, int k);
-void montgomery_multiplication(struct gn* A, struct gn* B, struct gn* n, struct gn* r, struct gn* v, int k, struct gn* result);
-void square_and_multiply(struct gn* A,struct gn* k, struct gn* r, struct gn* n, struct gn* v, struct gn* result);
+void montgomery_multiplication(struct gn* A, struct gn* B, struct gn* n, struct gn* v, int k, struct gn* result);
+void square_and_multiply(struct gn* a, struct gn* k, struct gn* r2, struct gn* r, struct gn* n, struct gn* v, struct gn* result);
 
 #endif  // GN_H
